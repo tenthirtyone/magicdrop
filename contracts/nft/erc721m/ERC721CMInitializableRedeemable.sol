@@ -9,7 +9,7 @@ import {AuthorizedRedeemerControl} from "contracts/common/AuthorizedRedeemerCont
 /// @notice An initializable ERC721AC contract with multi-stage minting, royalties, and authorized minters
 /// @dev Implements ERC721ACQueryable, ERC2981, Ownable, ReentrancyGuard, and custom mintingØ logic
 contract ERC721CMInitializableRedeemable is
-    ERC721CMInitializableV1_0_2,
+    ERC721CMInitializableV1_0_1,
     AuthorizedRedeemerControl
 {
     /// @notice Revert when not the owner of the tokens
@@ -28,7 +28,7 @@ contract ERC721CMInitializableRedeemable is
         override
         returns (string memory, string memory)
     {
-        return ("ERC721CMInitializableRedeemable", "1.0.0");
+        return ("ERC721CMInitializableRedeemable", "1.0.1");
     }
 
     /// @notice Burns a list of tokens.
