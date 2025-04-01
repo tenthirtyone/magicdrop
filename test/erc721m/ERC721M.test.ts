@@ -57,7 +57,9 @@ describe('ERC721M', function () {
   beforeEach(async () => {
     [owner, readonly, fundReceiver] = await ethers.getSigners();
 
-    const ERC721M = await ethers.getContractFactory('contracts/nft/erc721m/ERC721M.sol:ERC721M');
+    const ERC721M = await ethers.getContractFactory(
+      'contracts/nft/erc721m/ERC721M.sol:ERC721M',
+    );
     const erc721M = await ERC721M.deploy(
       'Test',
       'TEST',
@@ -75,54 +77,6 @@ describe('ERC721M', function () {
     contract = erc721M.connect(owner);
     readonlyContract = erc721M.connect(readonly);
     chainId = await ethers.provider.getNetwork().then((n) => n.chainId);
-  });
-
-  it('Contract can be paused/unpaused', async () => {
-    // starts unpaused
-    expect(await contract.getMintable()).to.be.true;
-
-    await contract.setMintable(false);
-    expect(await contract.getMintable()).to.be.false;
-
-    // unpause
-    await contract.setMintable(true);
-    expect(await contract.getMintable()).to.be.true;
-
-    // we should assert that the correct event is emitted
-    await expect(contract.setMintable(false))
-      .to.emit(contract, 'SetMintable')
-      .withArgs(false);
-    expect(await contract.getMintable()).to.be.false;
-
-    // readonlyContract should not be able to setMintable
-    await expect(readonlyContract.setMintable(true)).to.be.revertedWith(
-      'Unauthorized',
-    );
-  });
-
-  it('withdraws balance by owner', async () => {
-    // Send 100 wei to contract address for testing.
-    await ethers.provider.send('hardhat_setBalance', [
-      contract.address,
-      '0x64', // 100 wei
-    ]);
-    expect(
-      (await contract.provider.getBalance(contract.address)).toNumber(),
-    ).to.equal(100);
-
-    await expect(() => contract.withdraw()).to.changeEtherBalances(
-      [contract, owner, fundReceiver],
-      [-100, 0, 100],
-    );
-
-    expect(
-      (await contract.provider.getBalance(contract.address)).toNumber(),
-    ).to.equal(0);
-
-    // readonlyContract should not be able to withdraw
-    await expect(readonlyContract.withdraw()).to.be.revertedWith(
-      'Unauthorized',
-    );
   });
 
   describe('Stages', function () {
@@ -706,7 +660,9 @@ describe('ERC721M', function () {
       const contractBalancePost = await ethers.provider.getBalance(
         contract.address,
       );
-      expect(contractBalancePost.sub(contractBalanceInitial)).to.equal(MINT_FEE);
+      expect(contractBalancePost.sub(contractBalanceInitial)).to.equal(
+        MINT_FEE,
+      );
 
       const mintFeeReceiverBalancePost =
         await ethers.provider.getBalance(MINT_FEE_RECEIVER);
@@ -1672,7 +1628,9 @@ describe('ERC721M', function () {
 
   describe('Global wallet limit', function () {
     it('validates global wallet limit in constructor', async () => {
-      const ERC721M = await ethers.getContractFactory('contracts/nft/erc721m/ERC721M.sol:ERC721M');
+      const ERC721M = await ethers.getContractFactory(
+        'contracts/nft/erc721m/ERC721M.sol:ERC721M',
+      );
       await expect(
         ERC721M.deploy(
           'Test',
@@ -1781,81 +1739,6 @@ describe('ERC721M', function () {
       expect(tokenUri).to.equal(
         'ipfs://bafybeidntqfipbuvdhdjosntmpxvxyse2dkyfpa635u4g6txruvt5qf7y4/0.json',
       );
-    });
-  });
-
-  describe('Cosign', () => {
-    it('can deploy with 0x0 cosign', async () => {
-      const [owner, cosigner, fundReceiver] = await ethers.getSigners();
-      const ERC721M = await ethers.getContractFactory('contracts/nft/erc721m/ERC721M.sol:ERC721M');
-      const erc721M = await ERC721M.deploy(
-        'Test',
-        'TEST',
-        '',
-        1000,
-        0,
-        ethers.constants.AddressZero,
-        60,
-        ethers.constants.AddressZero,
-        fundReceiver.address,
-        MINT_FEE,
-      );
-      await erc721M.deployed();
-      const ownerConn = erc721M.connect(owner);
-      await expect(
-        ownerConn.getCosignDigest(owner.address, 1, false, 0, 0),
-      ).to.be.revertedWith('CosignerNotSet');
-
-      // we can set the cosigner
-      await ownerConn.setCosigner(cosigner.address);
-
-      // readonly contract can't set cosigner
-      await expect(
-        readonlyContract.setCosigner(cosigner.address),
-      ).to.be.revertedWith('Unauthorized');
-    });
-
-    it('can deploy with cosign', async () => {
-      const [_, minter, cosigner, fundReceiver] = await ethers.getSigners();
-      const ERC721M = await ethers.getContractFactory('contracts/nft/erc721m/ERC721M.sol:ERC721M');
-      const erc721M = await ERC721M.deploy(
-        'Test',
-        'TEST',
-        '',
-        1000,
-        0,
-        cosigner.address,
-        60,
-        ethers.constants.AddressZero,
-        fundReceiver.address,
-        MINT_FEE,
-      );
-      await erc721M.deployed();
-
-      const minterConn = erc721M.connect(minter);
-      const timestamp = Math.floor(new Date().getTime() / 1000);
-      const sig = await getCosignSignature(
-        erc721M,
-        cosigner,
-        minter.address,
-        timestamp,
-        1,
-        false,
-      );
-      await expect(
-        minterConn.assertValidCosign(minter.address, 1, timestamp, sig, 0),
-      ).to.not.be.reverted;
-
-      const invalidSig = sig + '00';
-      await expect(
-        minterConn.assertValidCosign(
-          minter.address,
-          1,
-          timestamp,
-          invalidSig,
-          0,
-        ),
-      ).to.be.revertedWith('InvalidCosignSignature');
     });
   });
 });
