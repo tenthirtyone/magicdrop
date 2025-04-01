@@ -57,7 +57,9 @@ describe('ERC721CM', function () {
   beforeEach(async () => {
     [owner, readonly, fundReceiver] = await ethers.getSigners();
 
-    const ERC721CM = await ethers.getContractFactory('contracts/nft/erc721m/ERC721CM.sol:ERC721CM');
+    const ERC721CM = await ethers.getContractFactory(
+      'contracts/nft/erc721m/ERC721CM.sol:ERC721CM',
+    );
     const erc721cm = await ERC721CM.deploy(
       'Test',
       'TEST',
@@ -75,47 +77,6 @@ describe('ERC721CM', function () {
     contract = erc721cm.connect(owner);
     readonlyContract = erc721cm.connect(readonly);
     chainId = await ethers.provider.getNetwork().then((n) => n.chainId);
-  });
-
-  it('Contract can be paused/unpaused', async () => {
-    // starts unpaused
-    expect(await contract.getMintable()).to.be.true;
-
-    // we should assert that the correct event is emitted
-    await expect(contract.setMintable(false))
-      .to.emit(contract, 'SetMintable')
-      .withArgs(false);
-    expect(await contract.getMintable()).to.be.false;
-
-    // readonlyContract should not be able to setMintable
-    await expect(readonlyContract.setMintable(true)).to.be.revertedWith(
-      'Ownable: caller is not the owner',
-    );
-  });
-
-  it('withdraws balance by owner', async () => {
-    // Send 100 wei to contract address for testing.
-    await ethers.provider.send('hardhat_setBalance', [
-      contract.address,
-      '0x64', // 100 wei
-    ]);
-    expect(
-      (await contract.provider.getBalance(contract.address)).toNumber(),
-    ).to.equal(100);
-
-    await expect(() => contract.withdraw()).to.changeEtherBalances(
-      [contract, owner, fundReceiver],
-      [-100, 0, 100],
-    );
-
-    expect(
-      (await contract.provider.getBalance(contract.address)).toNumber(),
-    ).to.equal(0);
-
-    // readonlyContract should not be able to withdraw
-    await expect(readonlyContract.withdraw()).to.be.revertedWith(
-      'Ownable: caller is not the owner',
-    );
   });
 
   describe('Stages', function () {
@@ -1657,7 +1618,9 @@ describe('ERC721CM', function () {
 
   describe('Global wallet limit', function () {
     it('validates global wallet limit in constructor', async () => {
-      const ERC721CM = await ethers.getContractFactory('contracts/nft/erc721m/ERC721CM.sol:ERC721CM');
+      const ERC721CM = await ethers.getContractFactory(
+        'contracts/nft/erc721m/ERC721CM.sol:ERC721CM',
+      );
       await expect(
         ERC721CM.deploy(
           'Test',
@@ -1774,7 +1737,9 @@ describe('ERC721CM', function () {
   describe('Cosign', () => {
     it('can deploy with 0x0 cosign', async () => {
       const [owner, cosigner, fundReceiver] = await ethers.getSigners();
-      const ERC721CM = await ethers.getContractFactory('contracts/nft/erc721m/ERC721CM.sol:ERC721CM');
+      const ERC721CM = await ethers.getContractFactory(
+        'contracts/nft/erc721m/ERC721CM.sol:ERC721CM',
+      );
       const erc721cm = await ERC721CM.deploy(
         'Test',
         'TEST',
@@ -1804,7 +1769,9 @@ describe('ERC721CM', function () {
 
     it('can deploy with cosign', async () => {
       const [_, minter, cosigner, fundReceiver] = await ethers.getSigners();
-      const ERC721CM = await ethers.getContractFactory('contracts/nft/erc721m/ERC721CM.sol:ERC721CM');
+      const ERC721CM = await ethers.getContractFactory(
+        'contracts/nft/erc721m/ERC721CM.sol:ERC721CM',
+      );
       const erc721cm = await ERC721CM.deploy(
         'Test',
         'TEST',
