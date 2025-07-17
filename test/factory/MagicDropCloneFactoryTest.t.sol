@@ -27,6 +27,8 @@ contract MagicDropCloneFactoryTest is Test {
     MagicDropCloneFactory internal factory;
     MagicDropTokenImplRegistry internal registry;
 
+    InvalidImplementation invalidImplementation;
+
     MockERC721Initializable internal erc721Impl;
     MockERC1155Initializable internal erc1155Impl;
     address internal owner = payable(address(0x1));
@@ -38,6 +40,7 @@ contract MagicDropCloneFactoryTest is Test {
     function setUp() public {
         vm.startPrank(owner);
 
+        invalidImplementation = new InvalidImplementation();
         // Deploy and initialize registry
         address registryImpl = LibClone.clone(address(new MagicDropTokenImplRegistry()));
         registry = MagicDropTokenImplRegistry(payable(registryImpl));
@@ -188,8 +191,9 @@ contract MagicDropCloneFactoryTest is Test {
         TokenStandard standard = TokenStandard.ERC721;
 
         vm.startPrank(owner);
-        InvalidImplementation impl = new InvalidImplementation();
-        uint32 implId = registry.registerImplementation(standard, address(impl), false, 0.01 ether, 0.00001 ether);
+
+        uint32 implId =
+            registry.registerImplementation(standard, address(invalidImplementation), false, 0.01 ether, 0.00001 ether);
         vm.stopPrank();
 
         vm.expectRevert(MagicDropCloneFactory.InitializationFailed.selector);
